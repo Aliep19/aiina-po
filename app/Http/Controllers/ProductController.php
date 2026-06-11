@@ -1,0 +1,186 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Product;
+use App\Models\Supplier;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+
+class ProductController extends Controller
+{
+    public function index(Request $request)
+    {
+        $allowedSort = [ 'product_code', 'name', 'unit', 'default_price', 'created_at'];
+
+        $search  = trim($request->input('search', ''));
+        $sortBy  = in_array($request->input('sort_by'), $allowedSort)
+                    ? $request->input('sort_by') : 'id';
+        $order   = strtolower($request->input('order', 'asc')) === 'desc' ? 'desc' : 'asc';
+        $perPage = max(1, min(100, (int) $request->input('per_page', 10)));
+
+        $products = Product::query()
+            // Hanya kolom list — specification sengaja tidak diambil di sini
+            ->select(['id', 'product_code', 'name', 'unit', 'default_price', 'created_at'])
+            // Jumlah supplier via sub-query COUNT (tidak join)
+            ->withCount('suppliers')
+            // Nama supplier primary via sub-select (1 query tambahan total)
+            ->withAggregate(
+                ['primarySupplier' => fn ($q) => $q->select('name')->limit(1)],
+                'name'
+            )
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($inner) use ($search) {
+                    $inner->where('product_code', 'like', "%{$search}%")
+                          ->orWhere('name',          'like', "%{$search}%")
+                          ->orWhere('unit',          'like', "%{$search}%");
+                });
+            })
+            ->orderBy($sortBy, $order)
+            ->paginate($perPage)
+            ->withQueryString();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => true,
+                'data'   => $products,
+            ]);
+        }
+
+        // Supplier list untuk dropdown di modal (hanya id + name)
+        $suppliers = Supplier::select('id', 'name')->orderBy('name')->get();
+
+        return view('products.index', compact('products', 'suppliers'));
+    }
+
+    /*
+    |──────────────────────────────────────────────────────────────────────────
+    | STORE
+    |──────────────────────────────────────────────────────────────────────────
+    */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'product_code'  => 'required|string|max:50|unique:products,product_code',
+            'name'          => 'required|string|max:255',
+            'specification' => 'nullable|string',
+            'unit'          => 'nullable|string|max:30',
+            'default_price' => 'nullable|numeric|min:0',
+            // Suppliers pivot
+            'suppliers'               => 'nullable|array',
+            'suppliers.*.id'          => 'required|exists:suppliers,id',
+            'suppliers.*.supplier_price' => 'nullable|numeric|min:0',
+            'suppliers.*.is_primary'  => 'nullable|boolean',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            $product = Product::create([
+                'product_code'  => $validated['product_code'],
+                'name'          => $validated['name'],
+                'specification' => $validated['specification'] ?? null,
+                'unit'          => $validated['unit'] ?? null,
+                'default_price' => $validated['default_price'] ?? 0,
+            ]);
+
+            $this->syncSuppliers($product, $validated['suppliers'] ?? []);
+        });
+
+        return response()->json(['status' => true, 'message' => 'Produk berhasil ditambahkan.'], 201);
+    }
+
+    /*
+    |──────────────────────────────────────────────────────────────────────────
+    | SHOW — detail termasuk specification & semua supplier
+    |──────────────────────────────────────────────────────────────────────────
+    */
+    public function show(string $id)
+    {
+        $product = Product::with([
+            'suppliers:id,name,phone,email,pic_name',   // hanya kolom perlu
+        ])->findOrFail($id);
+
+        return response()->json(['status' => true, 'data' => $product]);
+    }
+
+    /*
+    |──────────────────────────────────────────────────────────────────────────
+    | UPDATE
+    |──────────────────────────────────────────────────────────────────────────
+    */
+    public function update(Request $request, string $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $validated = $request->validate([
+            'product_code'  => ['sometimes', 'required', 'string', 'max:50',
+                                Rule::unique('products', 'product_code')->ignore($product->id)],
+            'name'          => 'sometimes|required|string|max:255',
+            'specification' => 'nullable|string',
+            'unit'          => 'nullable|string|max:30',
+            'default_price' => 'nullable|numeric|min:0',
+            'suppliers'               => 'nullable|array',
+            'suppliers.*.id'          => 'required|exists:suppliers,id',
+            'suppliers.*.supplier_price' => 'nullable|numeric|min:0',
+            'suppliers.*.is_primary'  => 'nullable|boolean',
+        ]);
+
+        DB::transaction(function () use ($product, $validated) {
+            $product->update(array_filter([
+                'product_code'  => $validated['product_code']  ?? null,
+                'name'          => $validated['name']          ?? null,
+                'specification' => $validated['specification'] ?? null,
+                'unit'          => $validated['unit']          ?? null,
+                'default_price' => $validated['default_price'] ?? null,
+            ], fn ($v) => !is_null($v)));
+
+            if (array_key_exists('suppliers', $validated)) {
+                $this->syncSuppliers($product, $validated['suppliers'] ?? []);
+            }
+        });
+
+        return response()->json(['status' => true, 'message' => 'Produk berhasil diperbarui.']);
+    }
+
+    /*
+    |──────────────────────────────────────────────────────────────────────────
+    | DESTROY
+    |──────────────────────────────────────────────────────────────────────────
+    */
+    public function destroy(string $id)
+    {
+        // cascadeOnDelete di migration sudah hapus pivot otomatis
+        Product::findOrFail($id)->delete();
+
+        return response()->json(['status' => true, 'message' => 'Produk berhasil dihapus.']);
+    }
+
+    /*
+    |──────────────────────────────────────────────────────────────────────────
+    | PRIVATE HELPER — sync pivot product_supplier
+    |──────────────────────────────────────────────────────────────────────────
+    */
+    private function syncSuppliers(Product $product, array $suppliers): void
+    {
+        if (empty($suppliers)) {
+            $product->suppliers()->detach();
+            return;
+        }
+
+        // Pastikan hanya 1 primary
+        $hasPrimary = collect($suppliers)->contains('is_primary', true);
+
+        $syncData = [];
+        foreach ($suppliers as $i => $s) {
+            $syncData[$s['id']] = [
+                'supplier_price' => $s['supplier_price'] ?? 0,
+                'is_primary'     => $hasPrimary
+                    ? (bool) ($s['is_primary'] ?? false)
+                    : ($i === 0),   // fallback: supplier pertama jadi primary
+            ];
+        }
+
+        // sync() → insert/update/delete dalam 1 operasi, tidak N query
+        $product->suppliers()->sync($syncData);
+    }
+}
