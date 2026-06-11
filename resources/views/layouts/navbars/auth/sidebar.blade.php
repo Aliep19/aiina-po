@@ -63,7 +63,7 @@
                         <i class="fas fa-truck fa-sm"></i>
                     </div>
 
-                    <span class="text-sm font-weight-bold">Master Supplier</span>
+                    <span class="text-sm font-weight-bold">Supplier</span>
                 </a>
             </li>
             <!-- PRODUCT -->
@@ -77,8 +77,25 @@
                         <i class="fas fa-box fa-sm"></i>
                     </div>
 
-                    <span class="text-sm font-weight-bold">Master Product</span>
+                    <span class="text-sm font-weight-bold">Product</span>
                 </a>
+            </li>
+            <!-- CUSTOMER -->
+            <li class="nav-item mb-1">
+                <a class="nav-link rounded-3 p-2 d-flex align-items-center {{ Request::is('customers*') ? 'active bg-light text-dark shadow-sm' : 'text-secondary' }}"
+                    href="{{ route('customers.index') }}">
+
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3 text-white"
+                        style="width: 32px; height: 32px; {{ Request::is('customers*') ? 'background-color: #fb6340;' : 'background-color: #6c757d;' }}">
+
+                        <i class="fas fa-users fa-sm"></i>
+                    </div>
+
+                    <span class="text-sm font-weight-bold">Customer</span>
+                </a>
+            <li class="nav-item mt-3 mb-2">
+                <h6 class="ps-4 text-uppercase text-xxs font-weight-bolder opacity-5 text-secondary tracking-wider">
+                    TRANSAKSI</h6>
             </li>
 
         </ul>
