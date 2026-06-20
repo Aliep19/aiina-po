@@ -26,7 +26,7 @@
                         <div class="input-group input-group-sm">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                             <input type="text" id="searchInput" class="form-control form-control-sm"
-                                   placeholder="Kode, nama atau satuan"
+                                   placeholder="nama atau satuan"
                                    value="{{ request('search') }}">
                         </div>
                     </div>
@@ -82,7 +82,6 @@
                         <thead>
                             <tr>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">No</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kode</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nama Produk</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Satuan</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Harga Default</th>
@@ -131,10 +130,6 @@
                 <input type="hidden" id="productId">
 
                 <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label text-xs">Kode Produk <span class="text-danger">*</span></label>
-                        <input type="text" id="productCode" class="form-control form-control-sm" placeholder="PRD-001">
-                    </div>
                     <div class="col-md-8">
                         <label class="form-label text-xs">Nama Produk <span class="text-danger">*</span></label>
                         <input type="text" id="productName" class="form-control form-control-sm" placeholder="Nama barang">
@@ -150,7 +145,7 @@
                             <input type="number" id="productPrice" class="form-control form-control-sm" placeholder="0" min="0" step="0.01">
                         </div>
                     </div>
-                    <div class="col-12">
+                    <div class="col-8">
                         <label class="form-label text-xs">Spesifikasi</label>
                         <textarea id="productSpec" class="form-control form-control-sm" rows="2" placeholder="Spesifikasi barang…"></textarea>
                     </div>
@@ -258,7 +253,6 @@ function renderRows(data, from) {
             <td class="ps-4">
                 <p class="text-xs font-weight-bold mb-0">${from + i}</p>
             </td>
-            <td><p class="text-xs font-weight-bold mb-0">${esc(p.product_code)}</p></td>
             <td><p class="text-xs font-weight-bold mb-0" style="max-width:200px">${esc(p.name)}</p></td>
             <td><p class="text-xs mb-0">${esc(p.unit ?? '—')}</p></td>
             <td><p class="text-xs mb-0">${fmtRp(p.default_price)}</p></td>
@@ -330,7 +324,6 @@ document.getElementById('searchInput').addEventListener('input', () => {
 function openModal(clear = true) {
     if (clear) {
         document.getElementById('productId').value    = '';
-        document.getElementById('productCode').value  = '';
         document.getElementById('productName').value  = '';
         document.getElementById('productUnit').value  = '';
         document.getElementById('productPrice').value = '';
@@ -420,7 +413,6 @@ async function editProduct(id) {
         const p    = json.data;
 
         document.getElementById('productId').value    = p.id;
-        document.getElementById('productCode').value  = p.product_code ?? '';
         document.getElementById('productName').value  = p.name ?? '';
         document.getElementById('productUnit').value  = p.unit ?? '';
         document.getElementById('productPrice').value = p.default_price ?? '';
@@ -456,17 +448,16 @@ async function showDetail(id) {
                 <td class="text-xs">${esc(s.name)}</td>
                 <td class="text-xs">${fmtRp(s.pivot?.supplier_price)}</td>
                 <td class="text-xs text-center">
-                    ${s.pivot?.status_supplier ? '<span class="badge bg-success">Utama</span>' : '—'}
+                    ${s.pivot?.status_supplier ? '<span class="badge bg-success">Utama</span>' : '<span class="badge bg-secondary">Biasa</span>'}
                 </td>
             </tr>`).join('') || `<tr><td colspan="3" class="text-center text-xs text-secondary">Belum ada supplier</td></tr>`;
 
         document.getElementById('detailContent').innerHTML = `
             <div class="row g-2 mb-2">
-                <div class="col-4"><small class="text-secondary">Kode</small><p class="text-xs font-weight-bold mb-0">${esc(p.product_code)}</p></div>
                 <div class="col-8"><small class="text-secondary">Nama</small><p class="text-xs font-weight-bold mb-0">${esc(p.name)}</p></div>
                 <div class="col-4"><small class="text-secondary">Satuan</small><p class="text-xs mb-0">${esc(p.unit??'—')}</p></div>
                 <div class="col-8"><small class="text-secondary">Harga Default</small><p class="text-xs mb-0">${fmtRp(p.default_price)}</p></div>
-                <div class="col-12"><small class="text-secondary">Spesifikasi</small><p class="text-xs mb-0" style="white-space:pre-wrap">${esc(p.specification??'—')}</p></div>
+                <div class="col-4"><small class="text-secondary">Spesifikasi</small><p class="text-xs mb-0" style="white-space:pre-wrap">${esc(p.specification??'—')}</p></div>
             </div>
             <hr class="my-2">
             <p class="text-xs fw-bold mb-2">Supplier</p>
@@ -475,7 +466,7 @@ async function showDetail(id) {
                     <thead><tr>
                         <th class="text-xxs text-secondary">Nama</th>
                         <th class="text-xxs text-secondary">Harga</th>
-                        <th class="text-xxs text-secondary text-center">Status</th>
+                        <th class="text-xxs text-secondary text-center">Status Supplier</th>
                     </tr></thead>
                     <tbody>${supRows}</tbody>
                 </table>
@@ -493,7 +484,6 @@ async function saveProduct() {
     const isEdit = !!id;
 
     const payload = {
-        product_code:  document.getElementById('productCode').value.trim(),
         name:          document.getElementById('productName').value.trim(),
         specification: document.getElementById('productSpec').value.trim(),
         unit:          document.getElementById('productUnit').value.trim(),
@@ -501,8 +491,8 @@ async function saveProduct() {
         suppliers:     collectSuppliers(),
     };
 
-    if (!payload.product_code || !payload.name) {
-        showFormErrors(['Kode produk dan nama wajib diisi.']);
+    if (!payload.name) {
+        showFormErrors(['Nama wajib diisi.']);
         return;
     }
 

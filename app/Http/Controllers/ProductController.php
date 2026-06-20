@@ -12,7 +12,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $allowedSort = [ 'product_code', 'name', 'unit', 'default_price', 'created_at'];
+        $allowedSort = [ 'name', 'unit', 'default_price', 'created_at'];
 
         $search  = trim($request->input('search', ''));
         $sortBy  = in_array($request->input('sort_by'), $allowedSort)
@@ -22,7 +22,7 @@ class ProductController extends Controller
 
         $products = Product::query()
             // Hanya kolom list — specification sengaja tidak diambil di sini
-            ->select(['id', 'product_code', 'name', 'unit', 'default_price', 'created_at'])
+            ->select(['id','name', 'unit', 'default_price', 'created_at'])
             // Jumlah supplier via sub-query COUNT (tidak join)
             ->withCount('suppliers')
             // Nama supplier primary via sub-select (1 query tambahan total)
@@ -32,8 +32,7 @@ class ProductController extends Controller
             )
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($inner) use ($search) {
-                    $inner->where('product_code', 'like', "%{$search}%")
-                          ->orWhere('name',          'like', "%{$search}%")
+                    $inner->where('name',          'like', "%{$search}%")
                           ->orWhere('unit',          'like', "%{$search}%");
                 });
             })
@@ -54,15 +53,9 @@ class ProductController extends Controller
         return view('products.index', compact('products', 'suppliers'));
     }
 
-    /*
-    |──────────────────────────────────────────────────────────────────────────
-    | STORE
-    |──────────────────────────────────────────────────────────────────────────
-    */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'product_code'  => 'required|string|max:50|unique:products,product_code',
             'name'          => 'required|string|max:255',
             'specification' => 'nullable|string',
             'unit'          => 'nullable|string|max:30',
@@ -76,7 +69,6 @@ class ProductController extends Controller
 
         DB::transaction(function () use ($validated) {
             $product = Product::create([
-                'product_code'  => $validated['product_code'],
                 'name'          => $validated['name'],
                 'specification' => $validated['specification'] ?? null,
                 'unit'          => $validated['unit'] ?? null,
@@ -89,11 +81,6 @@ class ProductController extends Controller
         return response()->json(['status' => true, 'message' => 'Produk berhasil ditambahkan.'], 201);
     }
 
-    /*
-    |──────────────────────────────────────────────────────────────────────────
-    | SHOW — detail termasuk specification & semua supplier
-    |──────────────────────────────────────────────────────────────────────────
-    */
     public function show(string $id)
     {
         $product = Product::with([
@@ -103,18 +90,11 @@ class ProductController extends Controller
         return response()->json(['status' => true, 'data' => $product]);
     }
 
-    /*
-    |──────────────────────────────────────────────────────────────────────────
-    | UPDATE
-    |──────────────────────────────────────────────────────────────────────────
-    */
     public function update(Request $request, string $id)
     {
         $product = Product::findOrFail($id);
 
         $validated = $request->validate([
-            'product_code'  => ['sometimes', 'required', 'string', 'max:50',
-                                Rule::unique('products', 'product_code')->ignore($product->id)],
             'name'          => 'sometimes|required|string|max:255',
             'specification' => 'nullable|string',
             'unit'          => 'nullable|string|max:30',
@@ -127,7 +107,6 @@ class ProductController extends Controller
 
         DB::transaction(function () use ($product, $validated) {
             $product->update(array_filter([
-                'product_code'  => $validated['product_code']  ?? null,
                 'name'          => $validated['name']          ?? null,
                 'specification' => $validated['specification'] ?? null,
                 'unit'          => $validated['unit']          ?? null,
@@ -142,11 +121,6 @@ class ProductController extends Controller
         return response()->json(['status' => true, 'message' => 'Produk berhasil diperbarui.']);
     }
 
-    /*
-    |──────────────────────────────────────────────────────────────────────────
-    | DESTROY
-    |──────────────────────────────────────────────────────────────────────────
-    */
     public function destroy(string $id)
     {
         // cascadeOnDelete di migration sudah hapus pivot otomatis
@@ -155,11 +129,6 @@ class ProductController extends Controller
         return response()->json(['status' => true, 'message' => 'Produk berhasil dihapus.']);
     }
 
-    /*
-    |──────────────────────────────────────────────────────────────────────────
-    | PRIVATE HELPER — sync pivot product_supplier
-    |──────────────────────────────────────────────────────────────────────────
-    */
     private function syncSuppliers(Product $product, array $suppliers): void
     {
         if (empty($suppliers)) {

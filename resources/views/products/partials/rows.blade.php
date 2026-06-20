@@ -3,7 +3,6 @@
     <td class="ps-4">
         <p class="text-xs font-weight-bold mb-0">{{ $products->firstItem() + $i }}</p>
     </td>
-    <td><p class="text-xs font-weight-bold mb-0">{{ $p->product_code }}</p></td>
     <td><p class="text-xs font-weight-bold mb-0" style="max-width:200px">{{ $p->name }}</p></td>
     <td><p class="text-xs mb-0">{{ $p->unit ?? '—' }}</p></td>
     <td><p class="text-xs mb-0">Rp {{ number_format($p->default_price, 0, ',', '.') }}</p></td>

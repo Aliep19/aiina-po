@@ -10,15 +10,12 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('product_code', 50)->unique();
             $table->string('name');
             $table->text('specification')->nullable();
             $table->string('unit', 30)->nullable();
             $table->decimal('default_price', 15, 2)->default(0);
             $table->timestamps();
 
-            // Index untuk kolom yang sering di-search/sort
-            $table->index('product_code');
             $table->index('name');
         });
 
