@@ -71,7 +71,7 @@ class ProductController extends Controller
             'suppliers'               => 'nullable|array',
             'suppliers.*.id'          => 'required|exists:suppliers,id',
             'suppliers.*.supplier_price' => 'nullable|numeric|min:0',
-            'suppliers.*.is_primary'  => 'nullable|boolean',
+            'suppliers.*.status_supplier'  => 'nullable|boolean',
         ]);
 
         DB::transaction(function () use ($validated) {
@@ -122,7 +122,7 @@ class ProductController extends Controller
             'suppliers'               => 'nullable|array',
             'suppliers.*.id'          => 'required|exists:suppliers,id',
             'suppliers.*.supplier_price' => 'nullable|numeric|min:0',
-            'suppliers.*.is_primary'  => 'nullable|boolean',
+            'suppliers.*.status_supplier'  => 'nullable|boolean',
         ]);
 
         DB::transaction(function () use ($product, $validated) {
@@ -168,14 +168,14 @@ class ProductController extends Controller
         }
 
         // Pastikan hanya 1 primary
-        $hasPrimary = collect($suppliers)->contains('is_primary', true);
+        $hasPrimary = collect($suppliers)->contains('status_supplier', true);
 
         $syncData = [];
         foreach ($suppliers as $i => $s) {
             $syncData[$s['id']] = [
                 'supplier_price' => $s['supplier_price'] ?? 0,
-                'is_primary'     => $hasPrimary
-                    ? (bool) ($s['is_primary'] ?? false)
+                'status_supplier'     => $hasPrimary
+                    ? (bool) ($s['status_supplier'] ?? false)
                     : ($i === 0),   // fallback: supplier pertama jadi primary
             ];
         }

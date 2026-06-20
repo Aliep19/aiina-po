@@ -7,7 +7,7 @@
         {{-- Header --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h4 class="mb-0">Produk</h4>
+                <h4 class="mb-0">Product</h4>
                 <p class="text-sm text-secondary mb-0">Kelola master data barang / item</p>
             </div>
             <button class="btn btn-sm btn-danger" onclick="openModal()">
@@ -404,7 +404,7 @@ function collectSuppliers() {
         result.push({
             id:             parseInt(id),
             supplier_price: parseFloat(row.querySelector('.sup-price').value) || 0,
-            is_primary:     row.querySelector('.sup-primary').checked,
+            status_supplier:     row.querySelector('.sup-primary').checked,
         });
     });
     return result;
@@ -429,7 +429,7 @@ async function editProduct(id) {
         supplierRowIdx = 0;
 
         (p.suppliers ?? []).forEach(s =>
-            addSupplierRow(s.id, s.pivot?.supplier_price ?? 0, s.pivot?.is_primary ?? false)
+            addSupplierRow(s.id, s.pivot?.supplier_price ?? 0, s.pivot?.status_supplier ?? false)
         );
 
         document.getElementById('productModalLabel').textContent = 'Edit Produk';
@@ -456,7 +456,7 @@ async function showDetail(id) {
                 <td class="text-xs">${esc(s.name)}</td>
                 <td class="text-xs">${fmtRp(s.pivot?.supplier_price)}</td>
                 <td class="text-xs text-center">
-                    ${s.pivot?.is_primary ? '<span class="badge bg-success">Utama</span>' : '—'}
+                    ${s.pivot?.status_supplier ? '<span class="badge bg-success">Utama</span>' : '—'}
                 </td>
             </tr>`).join('') || `<tr><td colspan="3" class="text-center text-xs text-secondary">Belum ada supplier</td></tr>`;
 

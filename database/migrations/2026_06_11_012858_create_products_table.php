@@ -32,7 +32,7 @@ return new class extends Migration
                   ->constrained('suppliers')
                   ->cascadeOnDelete();
             $table->decimal('supplier_price', 15, 2)->default(0); // harga dari supplier ini
-            $table->boolean('is_primary')->default(false);         // supplier utama?
+            $table->boolean('status_supplier')->default(false);         // supplier utama?
             $table->timestamps();
 
             $table->unique(['product_id', 'supplier_id']);

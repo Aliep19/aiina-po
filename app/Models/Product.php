@@ -36,9 +36,9 @@ class Product extends Model
     public function suppliers()
     {
         return $this->belongsToMany(Supplier::class, 'product_supplier')
-                    ->withPivot('supplier_price', 'is_primary')
+                    ->withPivot('supplier_price', 'status_supplier')
                     ->withTimestamps()
-                    ->orderByPivot('is_primary', 'desc');
+                    ->orderByPivot('status_supplier', 'desc');
     }
 
     /**
@@ -48,8 +48,8 @@ class Product extends Model
     public function primarySupplier()
     {
         return $this->belongsToMany(Supplier::class, 'product_supplier')
-                    ->withPivot('supplier_price', 'is_primary')
-                    ->wherePivot('is_primary', true)
+                    ->withPivot('supplier_price', 'status_supplier')
+                    ->wherePivot('status_supplier', true)
                     ->limit(1);
     }
 }
