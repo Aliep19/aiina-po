@@ -326,8 +326,8 @@
             <td class="right-col">
                 <div class="company-name-right">PT. ALPHA INNOVATECH INDONESIA</div>
                 <div class="company-details-right">
-                    Kebakelan RT 002, RW C14 No 128 Ds. Kebakelan,<br>
-                    Kec. Babekan, Kab. Bekasi, Prov. Jawa Barat,<br>
+                    Kebalen RT 002, RW 014 No 128 Ds. Kebalen,<br>
+                    Kec. Babelan, Kab. Bekasi, Prov. Jawa Barat,<br>
                     Indonesia 17610<br>
                     Tel: +62 857 7014 5284, +62 812 1944 6694<br>
                     www.aiinaindonesia.com<br>
