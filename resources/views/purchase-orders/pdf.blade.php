@@ -330,8 +330,8 @@
                     Kec. Babekan, Kab. Bekasi, Prov. Jawa Barat,<br>
                     Indonesia 17610<br>
                     Tel: +62 857 7014 5284, +62 812 1944 6694<br>
-                    www.ainmindustries.com<br>
-                    info@ainmindustries.com
+                    www.aiinaindonesia.com<br>
+                    info@aiinaindonesia.com
                 </div>
 
                 <table class="po-meta-table">
