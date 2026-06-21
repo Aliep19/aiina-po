@@ -97,7 +97,20 @@
                 <h6 class="ps-4 text-uppercase text-xxs font-weight-bolder opacity-5 text-secondary tracking-wider">
                     TRANSAKSI</h6>
             </li>
+            <!-- purchase orders -->
+            <li class="nav-item mb-1">
+                <a class="nav-link rounded-3 p-2 d-flex align-items-center {{ Request::is('purchase-orders*') ? 'active bg-light text-dark shadow-sm' : 'text-secondary' }}"
+                    href="{{ route('purchase-orders.index') }}">
 
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3 text-white"
+                        style="width: 32px; height: 32px; {{ Request::is('purchase-orders*') ? 'background-color: #fb6340;' : 'background-color: #6c757d;' }}">
+
+                        <i class="fas fa-box fa-sm"></i>
+                    </div>
+
+                    <span class="text-sm font-weight-bold">Purchase Orders</span>
+                </a>
+            </li>
         </ul>
     </div>
 </aside>

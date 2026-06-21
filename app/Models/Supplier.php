@@ -18,4 +18,18 @@ class Supplier extends Model
         'email',
         'pic_name',
     ];
+
+    // TAMBAHAN: Relasi Many-to-Many terbalik ke Product melalui pivot
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'product_supplier')
+                    ->withPivot('supplier_price', 'status_supplier')
+                    ->withTimestamps();
+    }
+
+    // TAMBAHAN: Untuk melihat daftar semua lembar dokumen PO yang pernah dikirim ke supplier ini
+    public function purchaseOrders()
+    {
+        return $this->hasMany(PurchaseOrder::class, 'supplier_id');
+    }
 }

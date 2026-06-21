@@ -40,6 +40,7 @@
 @endif
 
 <x-script></x-script>
+@yield('script')
 
 </body>
 </html>

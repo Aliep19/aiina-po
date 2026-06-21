@@ -22,16 +22,6 @@ class Product extends Model
         'default_price' => 'decimal:2',
     ];
 
-    /*
-    |──────────────────────────────────────────────
-    | RELATIONS
-    |──────────────────────────────────────────────
-    */
-
-    /**
-     * Supplier yang terhubung ke produk ini (many-to-many).
-     * Pivot menyimpan harga supplier & flag primary.
-     */
     public function suppliers()
     {
         return $this->belongsToMany(Supplier::class, 'product_supplier')
@@ -40,15 +30,17 @@ class Product extends Model
                     ->orderByPivot('status_supplier', 'desc');
     }
 
-    /**
-     * Supplier utama (eager-load ringan: hanya 1 row lewat pivot).
-     * Gunakan ini untuk tampil di list agar tidak N+1.
-     */
     public function primarySupplier()
     {
         return $this->belongsToMany(Supplier::class, 'product_supplier')
                     ->withPivot('supplier_price', 'status_supplier')
                     ->wherePivot('status_supplier', true)
                     ->limit(1);
+    }
+
+    // TAMBAHAN: Untuk melihat item produk ini sudah dipesan di PO mana saja
+    public function poItems()
+    {
+        return $this->hasMany(PurchaseOrderItem::class, 'product_id');
     }
 }

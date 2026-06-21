@@ -5,6 +5,7 @@ use App\Http\Controllers\SessionsController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\PurchaseOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -27,5 +28,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::apiResource('suppliers', SupplierController::class);
     Route::apiResource('products', ProductController::class);
     Route::apiResource('customers', CustomerController::class);
-
+    Route::resource('purchase-orders', PurchaseOrderController::class);
+    Route::get('purchase-orders/{purchaseOrder}/pdf', [PurchaseOrderController::class, 'downloadPdf'])->name('purchase-orders.pdf');
+    Route::get('purchase-orders/{purchaseOrder}/preview', [PurchaseOrderController::class, 'previewPdf'])->name('purchase-orders.preview');
 });
